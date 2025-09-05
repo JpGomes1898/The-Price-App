@@ -1,0 +1,10 @@
+# Ambientes virtuais
+venv/
+.venv/
+
+# Ficheiros de cache do Python
+__pycache__/
+
+# Ficheiros de base de dados SQLite
+*.db
+*.sqlite3

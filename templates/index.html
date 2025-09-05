@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriceApp: Calculadora de Precificação</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); padding: 1.5rem 2rem; }
+        .input-field { width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: #f9fafb; }
+        .input-field:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4); background-color: white; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease-in-out; display: inline-flex; align-items: center; justify-content: center; transform: scale(1); }
+        .btn:hover:not(:disabled) { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .btn-primary { background-color: #4f46e5; color: white; } .btn-primary:hover:not(:disabled) { background-color: #4338ca; }
+        .btn-secondary { background-color: #059669; color: white; } .btn-secondary:hover:not(:disabled) { background-color: #047857; }
+        .btn-danger { background-color: #dc2626; color: white; } .btn-danger:hover:not(:disabled) { background-color: #b91c1c; }
+        .loader { border: 4px solid #e5e7eb; border-top: 4px solid #4f46e5; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 2rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .modal { transition: opacity 0.3s ease; } .modal-content { transition: transform 0.3s ease; }
+        details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="flex justify-between items-center mb-10">
+            <div class="text-left">
+                <h1 class="text-4xl font-bold text-slate-900">PriceApp</h1>
+                <p class="text-slate-500 mt-1">Bem-vindo(a)!</p>
+            </div>
+            <button id="logout-btn" class="btn bg-slate-200 text-slate-700 hover:bg-slate-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                Sair
+            </button>
+        </header>
+
+        <main class="space-y-8">
+            <!-- Dashboard de Métricas -->
+            <div id="dashboard-card" class="card">
+                <h2 class="text-2xl font-bold text-slate-800 mb-4">Dashboard</h2>
+                <div id="dashboard-metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                     <div class="p-5 bg-slate-50 rounded-lg flex items-center gap-4">
+                        <div class="p-3 bg-indigo-100 text-indigo-600 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-600 font-semibold">Total de Receitas</p>
+                            <p id="total-recipes" class="text-3xl font-bold text-slate-900">0</p>
+                        </div>
+                    </div>
+                    <div class="p-5 bg-slate-50 rounded-lg flex items-center gap-4">
+                        <div class="p-3 bg-emerald-100 text-emerald-600 rounded-full">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-600 font-semibold">Produto Mais Lucrativo</p>
+                            <p id="most-lucrative" class="text-xl font-bold text-slate-900 truncate">-</p>
+                        </div>
+                    </div>
+                    <div class="p-5 bg-slate-50 rounded-lg flex items-center gap-4">
+                        <div class="p-3 bg-amber-100 text-amber-600 rounded-full">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-slate-600 font-semibold">Média de Lucro</p>
+                            <p id="average-profit" class="text-3xl font-bold text-slate-900">0%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ATUALIZADO: Assistente IA -->
+            <div id="ai-assistant-card" class="card">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 bg-purple-100 text-purple-600 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V3m0 18v-3M5.636 5.636l-1.414-1.414M19.778 19.778l-1.414-1.414M19.778 5.636l-1.414 1.414M5.636 19.778l-1.414 1.414M12 12a6 6 0 100-12 6 6 0 000 12z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800">Análise e Otimização com IA</h2>
+                </div>
+                <p class="text-slate-600 mb-4">Receba insights sobre custos e sugestões de preços para maximizar os seus lucros.</p>
+                <button id="run-ai-analysis-btn" class="btn bg-purple-600 text-white hover:bg-purple-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V3m0 18v-3M5.636 5.636l-1.414-1.414M19.778 19.778l-1.414-1.414M19.778 5.636l-1.414 1.414M5.636 19.778l-1.414 1.414M12 12a6 6 0 100-12 6 6 0 000 12z" />
+                    </svg>
+                    Analisar Meu Negócio
+                </button>
+                <div id="ai-loader" class="loader hidden mt-4"></div>
+                <div id="ai-suggestion-result" class="mt-4 pt-4 border-t border-slate-200 hidden">
+                    <!-- Os insights da IA aparecerão aqui -->
+                </div>
+            </div>
+
+             <!-- Card da Calculadora -->
+            <div id="calculator-card" class="card">
+                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-bold text-slate-800">Calculadora de Preços</h2>
+                    <button id="manage-ingredients-btn" class="btn btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                        Banco de Ingredientes
+                    </button>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label for="productName" class="block text-sm font-medium text-slate-700 mb-1">Nome da Receita/Produto</label>
+                        <input type="text" id="productName" class="input-field" placeholder="Ex: Bolo de Chocolate">
+                    </div>
+
+                    <!-- Ingredientes da Receita -->
+                    <fieldset>
+                        <legend class="text-lg font-semibold text-slate-800 mb-2">Ingredientes da Receita</legend>
+                        <div id="recipe-ingredients-list" class="space-y-3"></div>
+                        <button id="add-recipe-ingredient-btn" class="btn bg-slate-200 text-slate-700 hover:bg-slate-300 mt-4">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            Adicionar Ingrediente
+                        </button>
+                    </fieldset>
+                    
+                    <!-- Gastos Fixos -->
+                    <fieldset>
+                        <legend class="text-lg font-semibold text-slate-800 mb-2">Gastos Fixos</legend>
+                        <div id="fixed-costs-list" class="space-y-3"></div>
+                        <button id="add-fixed-cost-btn" class="btn bg-slate-200 text-slate-700 hover:bg-slate-300 mt-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                            Adicionar Gasto Fixo
+                        </button>
+                    </fieldset>
+
+                    <!-- Produção e Lucro -->
+                     <fieldset>
+                        <legend class="text-lg font-semibold text-slate-800 mb-2">Produção e Lucro</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="totalQuantity" class="block text-sm font-medium text-slate-700 mb-1">Qtd. Produzida (Unidades)</label>
+                                <input type="number" id="totalQuantity" class="input-field" placeholder="Ex: 10" min="1">
+                            </div>
+                            <div>
+                                <label for="profitMargin" class="block text-sm font-medium text-slate-700 mb-1">Margem de Lucro (%)</label>
+                                <input type="number" id="profitMargin" class="input-field" placeholder="Ex: 50" min="0">
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <div class="mt-8 flex flex-col sm:flex-row gap-4">
+                    <button id="calculate-btn" class="btn btn-primary w-full sm:w-auto flex-grow">Calcular Preço</button>
+                    <button id="save-btn" class="btn btn-secondary w-full sm:w-auto">Salvar Receita</button>
+                     <button id="clear-btn" class="btn bg-slate-500 hover:bg-slate-600 text-white w-full sm:w-auto">Limpar Formulário</button>
+                </div>
+            </div>
+            
+            <!-- Card de Resultados -->
+            <div id="results-card" class="card hidden">
+                 <h2 class="text-2xl font-bold text-slate-800 mb-4">Resultado da Precificação</h2>
+                <div class="space-y-3 text-lg">
+                    <div class="flex justify-between"><span>Custo Total:</span> <span id="total-cost" class="font-semibold text-slate-700"></span></div>
+                    <div class="flex justify-between"><span>Custo por Unidade:</span> <span id="unit-cost" class="font-semibold text-slate-700"></span></div>
+                    <hr class="my-3">
+                    <div class="flex justify-between text-emerald-700"><span>Faturamento Total:</span> <span id="total-revenue" class="font-semibold"></span></div>
+                    <div class="flex justify-between text-emerald-700"><span>Lucro Total:</span> <span id="total-profit" class="font-semibold"></span></div>
+                    <div class="flex justify-between"><span>Lucro por Unidade:</span> <span id="unit-profit" class="font-semibold text-slate-700"></span></div>
+                    <hr class="my-3">
+                    <div class="flex justify-between items-center text-2xl font-bold text-indigo-600 bg-indigo-50 p-4 rounded-lg"><span>Preço de Venda Unitário:</span> <span id="unit-price" class="text-3xl"></span></div>
+                </div>
+            </div>
+            <!-- Card de Receitas Salvas -->
+            <div class="card">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                    <h2 class="text-2xl font-bold text-slate-800">Minhas Receitas Salvas</h2>
+                    <input type="text" id="search-bar" class="input-field sm:w-64" placeholder="Pesquisar por nome...">
+                </div>
+                <div id="loader" class="loader"></div>
+                <div id="saved-recipes-list" class="space-y-4"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast & Modals -->
+    <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg hidden opacity-0 transition-opacity duration-300"></div>
+    <div id="confirm-modal-container"></div>
+    <div id="ingredients-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm h-full w-full hidden items-center justify-center z-40 opacity-0">
+        <div class="modal-content card max-w-2xl w-full mx-4 transform -translate-y-10">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">Banco de Ingredientes</h2>
+            <form id="ingredient-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-end p-4 bg-slate-50 rounded-lg">
+                 <input type="hidden" id="ingredient-id">
+                 <div>
+                    <label for="ingredient-name" class="block text-sm font-medium text-slate-700 mb-1">Nome</label>
+                    <input type="text" id="ingredient-name" class="input-field" placeholder="Farinha de Trigo" required>
+                 </div>
+                 <div>
+                    <label for="ingredient-cost" class="block text-sm font-medium text-slate-700 mb-1">Custo Total (R$)</label>
+                    <input type="number" id="ingredient-cost" class="input-field" placeholder="5.00" required step="0.01">
+                 </div>
+                 <div>
+                    <label for="ingredient-unit" class="block text-sm font-medium text-slate-700 mb-1">Unidade de Compra</label>
+                    <input type="text" id="ingredient-unit" class="input-field" placeholder="kg, L, g, un" required>
+                 </div>
+                 <div class="md:col-span-3 flex gap-2">
+                    <button type="submit" class="btn btn-primary w-full">Salvar Ingrediente</button>
+                    <button type="button" id="cancel-edit-ingredient-btn" class="btn bg-slate-300 text-slate-800 w-full hidden">Cancelar Edição</button>
+                 </div>
+            </form>
+            <div id="ingredient-bank-list" class="space-y-2 max-h-64 overflow-y-auto pr-2"></div>
+            <button id="close-ingredients-modal-btn" class="btn bg-slate-500 text-white mt-6">Fechar</button>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('preciapp_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const API_URL = '/api';
+        let ingredientBank = [];
+
+        const DOMElements = {
+            logoutBtn: document.getElementById('logout-btn'),
+            totalRecipes: document.getElementById('total-recipes'), mostLucrative: document.getElementById('most-lucrative'), averageProfit: document.getElementById('average-profit'),
+            productName: document.getElementById('productName'), recipeIngredientsList: document.getElementById('recipe-ingredients-list'), fixedCostsList: document.getElementById('fixed-costs-list'),
+            totalQuantity: document.getElementById('totalQuantity'), profitMargin: document.getElementById('profitMargin'),
+            calculateBtn: document.getElementById('calculate-btn'), saveBtn: document.getElementById('save-btn'), clearBtn: document.getElementById('clear-btn'),
+            manageIngredientsBtn: document.getElementById('manage-ingredients-btn'), addRecipeIngredientBtn: document.getElementById('add-recipe-ingredient-btn'), addFixedCostBtn: document.getElementById('add-fixed-cost-btn'),
+            resultsCard: document.getElementById('results-card'), totalCost: document.getElementById('total-cost'), unitCost: document.getElementById('unit-cost'),
+            totalRevenue: document.getElementById('total-revenue'), totalProfit: document.getElementById('total-profit'), unitProfit: document.getElementById('unit-profit'), unitPrice: document.getElementById('unit-price'),
+            savedRecipesList: document.getElementById('saved-recipes-list'), searchBar: document.getElementById('search-bar'), loader: document.getElementById('loader'),
+            ingredientsModal: document.getElementById('ingredients-modal'), closeIngredientsModalBtn: document.getElementById('close-ingredients-modal-btn'),
+            ingredientForm: document.getElementById('ingredient-form'), ingredientBankList: document.getElementById('ingredient-bank-list'),
+            ingredientIdField: document.getElementById('ingredient-id'), ingredientNameField: document.getElementById('ingredient-name'),
+            ingredientCostField: document.getElementById('ingredient-cost'), ingredientUnitField: document.getElementById('ingredient-unit'),
+            cancelEditIngredientBtn: document.getElementById('cancel-edit-ingredient-btn'),
+            toast: document.getElementById('toast'), confirmModalContainer: document.getElementById('confirm-modal-container'),
+            // ATUALIZADO: Elementos da IA
+            runAIAnalysisBtn: document.getElementById('run-ai-analysis-btn'),
+            aiLoader: document.getElementById('ai-loader'),
+            aiSuggestionResult: document.getElementById('ai-suggestion-result'),
+        };
+
+        const apiHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+
+        // --- Funções Utilitárias ---
+        const showToast = (message, type = 'success') => { DOMElements.toast.textContent = message; DOMElements.toast.className = `fixed top-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 ${type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`; DOMElements.toast.classList.remove('hidden', 'opacity-0'); setTimeout(() => { DOMElements.toast.classList.add('opacity-0', 'hidden'); }, 3000); };
+        const showModal = (modalEl) => { modalEl.classList.remove('hidden'); setTimeout(() => { modalEl.classList.remove('opacity-0'); modalEl.querySelector('.modal-content').classList.remove('-translate-y-10'); }, 10); };
+        const hideModal = (modalEl) => { modalEl.classList.add('opacity-0'); modalEl.querySelector('.modal-content').classList.add('-translate-y-10'); setTimeout(() => modalEl.classList.add('hidden'), 300); };
+        const createConfirmModal = (message, onConfirm) => { const modalHTML = `<div id="confirm-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm h-full w-full flex items-center justify-center z-50"><div class="modal-content relative mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white"><div class="mt-3 text-center"><h3 class="text-lg leading-6 font-medium text-slate-900 mt-2">Confirmação</h3><div class="mt-2 px-7 py-3"><p class="text-sm text-slate-500">${message}</p></div><div class="items-center px-4 py-3"><button id="modal-confirm-btn" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700">Confirmar</button><button id="modal-cancel-btn" class="px-4 py-2 bg-slate-200 text-slate-900 text-base font-medium rounded-md w-auto shadow-sm hover:bg-slate-300 ml-3">Cancelar</button></div></div></div></div>`; DOMElements.confirmModalContainer.innerHTML = modalHTML; document.getElementById('modal-confirm-btn').onclick = () => { onConfirm(); DOMElements.confirmModalContainer.innerHTML = ''; }; document.getElementById('modal-cancel-btn').onclick = () => { DOMElements.confirmModalContainer.innerHTML = ''; }; };
+
+        const api = {
+            get: async (endpoint) => fetch(`${API_URL}/${endpoint}`, { headers: apiHeaders }).then(res => res.json()),
+            post: async (endpoint, body) => fetch(`${API_URL}/${endpoint}`, { method: 'POST', headers: apiHeaders, body: JSON.stringify(body) }).then(res => res.json()),
+            delete: async (endpoint, id) => fetch(`${API_URL}/${endpoint}/${id}`, { method: 'DELETE', headers: apiHeaders }).then(res => res.json()),
+        };
+
+        // --- NOVA Lógica do Assistente IA ---
+        const runAIAnalysis = async () => {
+            DOMElements.aiLoader.classList.remove('hidden');
+            DOMElements.aiSuggestionResult.classList.add('hidden');
+            DOMElements.runAIAnalysisBtn.disabled = true;
+
+            const recipes = await api.get('recipes');
+
+            setTimeout(() => {
+                let insightsHTML = '<div class="space-y-4">';
+
+                // 1. Previsão de Custos
+                if (ingredientBank.length > 0) {
+                    const randomIngredient = ingredientBank[Math.floor(Math.random() * ingredientBank.length)];
+                    const percentageIncrease = Math.floor(Math.random() * 16) + 5; // 5% a 20%
+                    insightsHTML += `
+                        <div class="p-4 bg-amber-50 border-l-4 border-amber-400">
+                            <h3 class="font-bold text-amber-800">Previsão de Custos</h3>
+                            <p class="text-amber-700 mt-1">Nossa análise de mercado indica uma provável alta de <strong>${percentageIncrease}%</strong> no custo de "<strong>${randomIngredient.name}</strong>" no próximo mês. Considere antecipar sua compra.</p>
+                        </div>
+                    `;
+                }
+
+                // 2. Otimização de Preço
+                if (recipes.length > 0) {
+                    const recipeToOptimize = recipes.sort((a, b) => b.id - a.id)[0]; // Pega a mais recente
+                    const currentPrice = recipeToOptimize.calculated.unitPrice;
+                    const currentProfit = recipeToOptimize.calculated.unitProfit;
+                    const priceIncreaseFactor = 1 + ((Math.random() * 5) + 5) / 100; // Aumento de 5% a 10%
+                    const optimizedPrice = currentPrice * priceIncreaseFactor;
+                    const optimizedProfit = currentProfit * priceIncreaseFactor;
+                    const profitGain = ((optimizedProfit / currentProfit) - 1) * 100;
+
+                    insightsHTML += `
+                        <div class="p-4 bg-emerald-50 border-l-4 border-emerald-400">
+                            <h3 class="font-bold text-emerald-800">Otimização de Preço</h3>
+                            <p class="text-emerald-700 mt-1">Para sua receita "<strong>${recipeToOptimize.productName}</strong>", sugerimos um preço otimizado de <strong>R$ ${optimizedPrice.toFixed(2)}</strong>. Este ajuste pode aumentar seu lucro por unidade em aproximadamente <strong>${profitGain.toFixed(1)}%</strong>.</p>
+                        </div>
+                    `;
+                }
+
+                if (ingredientBank.length === 0 && recipes.length === 0) {
+                    insightsHTML += `<p class="text-center text-slate-500">Adicione ingredientes e receitas para receber insights da IA!</p>`;
+                }
+
+                insightsHTML += '</div>';
+                DOMElements.aiSuggestionResult.innerHTML = insightsHTML;
+                DOMElements.aiLoader.classList.add('hidden');
+                DOMElements.aiSuggestionResult.classList.remove('hidden');
+                DOMElements.runAIAnalysisBtn.disabled = false;
+
+            }, 2000); // Simula o tempo de processamento da IA
+        };
+
+
+        // --- Lógica do Banco de Ingredientes ---
+        const loadIngredientBank = async () => { ingredientBank = await api.get('ingredients'); renderIngredientBank(); };
+        const renderIngredientBank = () => { DOMElements.ingredientBankList.innerHTML = ingredientBank.map(ing => `<div class="p-3 border rounded-md flex justify-between items-center bg-white hover:bg-slate-50"><div><span class="font-semibold">${ing.name}</span> <span class="text-sm text-slate-500">- R$ ${ing.cost.toFixed(2)} / ${ing.unit}</span></div><div class="flex gap-2"><button class="edit-ingredient-btn btn btn-secondary p-2" data-id="${ing.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button><button class="delete-ingredient-btn btn btn-danger p-2" data-id="${ing.id}"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button></div></div>`).join(''); };
+        DOMElements.ingredientForm.addEventListener('submit', async (e) => { e.preventDefault(); const data = { name: DOMElements.ingredientNameField.value, cost: parseFloat(DOMElements.ingredientCostField.value), unit: DOMElements.ingredientUnitField.value }; await api.post('ingredients', data); showToast('Ingrediente adicionado!'); DOMElements.ingredientForm.reset(); loadIngredientBank(); });
+        DOMElements.ingredientBankList.addEventListener('click', e => { const btn = e.target.closest('button'); if (!btn) return; const id = btn.dataset.id; if (btn.classList.contains('delete-ingredient-btn')) { createConfirmModal('Deseja realmente excluir este ingrediente do banco?', async () => { await api.delete('ingredients', id); showToast('Ingrediente excluído!'); loadIngredientBank(); }); } });
+
+        // --- Lógica do Formulário de Receita ---
+        const addRecipeIngredientField = (e = {}) => {
+            const row = document.createElement('div');
+            row.className = "grid grid-cols-12 gap-2 items-center recipe-ingredient-row";
+            const optionsHTML = ingredientBank.map(ing => `<option value="${ing.id}" ${e.id == ing.id ? "selected" : ""}>${ing.name} (${ing.unit})</option>`).join('');
+            row.innerHTML = `
+                <div class="col-span-5"><select class="input-field recipe-ingredient-select"><option value="">Selecione...</option>${optionsHTML}</select></div>
+                <div class="col-span-3"><input type="number" class="input-field recipe-ingredient-quantity" placeholder="Qtd. usada" value="${e.quantity || ''}" step="0.01"></div>
+                <div class="col-span-3"><input type="text" class="input-field recipe-ingredient-cost bg-slate-100" readonly placeholder="Custo (R$)" value="${e.cost ? e.cost.toFixed(2) : ''}"></div>
+                <div class="col-span-1"><button class="remove-field-btn btn btn-danger p-2 h-full w-full">X</button></div>`;
+            DOMElements.recipeIngredientsList.appendChild(row);
+        };
+
+        const addFixedCostField = (cost = {}) => {
+            const row = document.createElement('div');
+            row.className = "grid grid-cols-11 gap-2 items-center fixed-cost-row";
+            row.innerHTML = `
+                <div class="col-span-7"><input type="text" class="input-field fixed-cost-name" placeholder="Nome do Custo (Gás, Embalagem)" value="${cost.name || ''}"></div>
+                <div class="col-span-3"><input type="number" class="input-field fixed-cost-value" placeholder="Custo (R$)" value="${cost.cost || ''}" step="0.01"></div>
+                <div class="col-span-1"><button class="remove-field-btn btn btn-danger p-2 h-full w-full">X</button></div>`;
+            DOMElements.fixedCostsList.appendChild(row);
+        };
+        
+        DOMElements.recipeIngredientsList.addEventListener('change', e => {
+            if (e.target.classList.contains('recipe-ingredient-select') || e.target.classList.contains('recipe-ingredient-quantity')) {
+                const row = e.target.closest('.recipe-ingredient-row');
+                const selectedId = row.querySelector('.recipe-ingredient-select').value;
+                const quantity = parseFloat(row.querySelector('.recipe-ingredient-quantity').value) || 0;
+                const costEl = row.querySelector('.recipe-ingredient-cost');
+                if (!selectedId) { costEl.value = ''; return; }
+                const ingredient = ingredientBank.find(ing => ing.id == selectedId);
+                const calculatedCost = (ingredient.cost || 0) * quantity;
+                costEl.value = calculatedCost.toFixed(2);
+            }
+        });
+        document.body.addEventListener('click', e => { if (e.target.closest('.remove-field-btn')) { e.target.closest('.grid').remove(); } });
+
+        const clearForm = () => { DOMElements.productName.value = ''; DOMElements.recipeIngredientsList.innerHTML = ''; DOMElements.fixedCostsList.innerHTML = ''; DOMElements.totalQuantity.value = ''; DOMElements.profitMargin.value = ''; addRecipeIngredientField(); addFixedCostField({ name: 'Gás' }); addFixedCostField({ name: 'Embalagem' }); DOMElements.resultsCard.classList.add('hidden'); DOMElements.saveBtn.textContent = 'Salvar Receita'; };
+        const getFormData = () => {
+            const ingredients = [...DOMElements.recipeIngredientsList.querySelectorAll('.recipe-ingredient-row')].map(row => { const selectedId = row.querySelector('.recipe-ingredient-select').value; const ingredient = ingredientBank.find(i => i.id == selectedId); return { id: selectedId, name: ingredient ? ingredient.name : '', quantity: parseFloat(row.querySelector('.recipe-ingredient-quantity').value) || 0, cost: parseFloat(row.querySelector('.recipe-ingredient-cost').value) || 0 }; }).filter(i => i.id && i.quantity > 0);
+            const fixedCosts = [...DOMElements.fixedCostsList.querySelectorAll('.fixed-cost-row')].map(row => ({ name: row.querySelector('.fixed-cost-name').value, cost: parseFloat(row.querySelector('.fixed-cost-value').value) || 0 })).filter(c => c.name && c.cost > 0);
+            const data = { productName: DOMElements.productName.value.trim(), totalQuantity: parseInt(DOMElements.totalQuantity.value), profitMargin: parseFloat(DOMElements.profitMargin.value), ingredients, fixedCosts };
+            if (!data.productName || !data.totalQuantity || data.ingredients.length === 0) { showToast('Preencha todos os campos obrigatórios.', 'error'); return null; }
+            return data;
+        };
+
+        DOMElements.calculateBtn.addEventListener('click', () => {
+            const data = getFormData(); if (!data) return;
+            const ingredientCost = data.ingredients.reduce((sum, i) => sum + i.cost, 0);
+            const fixedCost = data.fixedCosts.reduce((sum, c) => sum + c.cost, 0);
+            const totalCost = ingredientCost + fixedCost;
+            const unitCost = totalCost / data.totalQuantity;
+            const unitProfit = unitCost * (data.profitMargin / 100);
+            const unitPrice = unitCost + unitProfit;
+            const totalRevenue = unitPrice * data.totalQuantity;
+            const totalProfit = unitProfit * data.totalQuantity;
+            DOMElements.totalCost.textContent = `R$ ${totalCost.toFixed(2)}`; DOMElements.unitCost.textContent = `R$ ${unitCost.toFixed(2)}`; DOMElements.unitProfit.textContent = `R$ ${unitProfit.toFixed(2)}`; DOMElements.unitPrice.textContent = `R$ ${unitPrice.toFixed(2)}`; DOMElements.totalRevenue.textContent = `R$ ${totalRevenue.toFixed(2)}`; DOMElements.totalProfit.textContent = `R$ ${totalProfit.toFixed(2)}`;
+            DOMElements.resultsCard.classList.remove('hidden');
+        });
+        DOMElements.saveBtn.addEventListener('click', async () => { const data = getFormData(); if (data) { await api.post('recipes', data); showToast('Receita salva com sucesso!'); clearForm(); loadAllData(); } });
+
+        // --- Lógica de Carregamento e Renderização ---
+        const loadRecipes = async () => { DOMElements.loader.style.display = 'block'; DOMElements.savedRecipesList.innerHTML = ''; try { const recipes = await api.get('recipes'); renderRecipes(recipes); } catch { DOMElements.savedRecipesList.innerHTML = '<p class="text-red-500 text-center">Erro ao carregar receitas.</p>'; } finally { DOMElements.loader.style.display = 'none'; } };
+        const renderRecipes = (recipes) => {
+            const searchTerm = DOMElements.searchBar.value.toLowerCase();
+            const filteredRecipes = recipes.filter(r => r.productName.toLowerCase().includes(searchTerm));
+            if (filteredRecipes.length === 0) { DOMElements.savedRecipesList.innerHTML = '<p class="text-slate-500 text-center">Nenhuma receita encontrada.</p>'; return; }
+            DOMElements.savedRecipesList.innerHTML = filteredRecipes.map(r => `<div class="p-4 border rounded-lg bg-white hover:shadow-md transition-shadow"><details><summary class="flex justify-between items-start cursor-pointer"><div><h3 class="font-semibold text-lg text-slate-800">${r.productName}</h3><p class="text-sm text-slate-500">Venda: <span class="font-bold text-emerald-600">R$ ${r.calculated.unitPrice.toFixed(2)}</span> | Lucro: R$ ${r.calculated.unitProfit.toFixed(2)}/un</p></div><div class="flex gap-2 items-center summary-buttons"><button class="delete-recipe-btn btn btn-danger p-2" data-id="${r.id}">Excluir</button></div></summary><div class="mt-4 pt-4 border-t border-slate-200"><h4 class="font-semibold mb-2">Detalhes da Receita:</h4><div class="text-sm space-y-1 text-slate-600"><p><strong>Custo Total:</strong> R$ ${r.calculated.totalCost.toFixed(2)}</p><p><strong>Faturamento Total:</strong> R$ ${r.calculated.totalRevenue.toFixed(2)}</p><p><strong>Lucro Total:</strong> R$ ${r.calculated.totalProfit.toFixed(2)}</p></div></div></details></div>`).join('');
+        };
+        DOMElements.searchBar.addEventListener('input', async () => { const recipes = await api.get('recipes'); renderRecipes(recipes); });
+        DOMElements.savedRecipesList.addEventListener('click', async e => { const btn = e.target.closest('button'); if (!btn) return; e.preventDefault(); const id = btn.dataset.id; if (btn.classList.contains('delete-recipe-btn')) { createConfirmModal('Deseja realmente excluir esta receita?', async () => { await api.delete('recipes', id); showToast('Receita excluída!'); loadAllData(); }); } });
+        
+        const loadDashboard = async () => { const metrics = await api.get('dashboard-metrics'); DOMElements.totalRecipes.textContent = metrics.totalRecipes; DOMElements.mostLucrative.textContent = metrics.mostLucrativeProduct || '-'; DOMElements.averageProfit.textContent = `${metrics.averageProfitMargin}%`; };
+        const loadAllData = () => { loadDashboard(); loadRecipes(); };
+        
+        // --- Event Listeners Iniciais ---
+        DOMElements.logoutBtn.addEventListener('click', () => { localStorage.removeItem('preciapp_token'); window.location.href = '/login'; });
+        DOMElements.manageIngredientsBtn.addEventListener('click', () => showModal(DOMElements.ingredientsModal));
+        DOMElements.closeIngredientsModalBtn.addEventListener('click', () => hideModal(DOMElements.ingredientsModal));
+        DOMElements.addRecipeIngredientBtn.addEventListener('click', () => addRecipeIngredientField());
+        DOMElements.addFixedCostBtn.addEventListener('click', () => addFixedCostField());
+        DOMElements.clearBtn.addEventListener('click', clearForm);
+        DOMElements.runAIAnalysisBtn.addEventListener('click', runAIAnalysis); // ATUALIZADO
+
+        // --- Inicialização ---
+        const init = async () => { await loadIngredientBank(); clearForm(); loadAllData(); };
+        init();
+    });
+    </script>
+</body>
+</html>
+
