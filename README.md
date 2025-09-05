@@ -42,8 +42,7 @@ Siga os passos abaixo para ter a aplicação a funcionar na sua máquina.
 
 Clone o Repositório:
 
-git clone [https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git](https://github.com/SEU-USUARIO/SEU-REPOSITORIO.git)
-cd SEU-REPOSITORIO
+git clone [(https://github.com/JpGomes1898/The-Price-App)](https://github.com/JpGomes1898/The-Price-App)
 
 Crie e Ative um Ambiente Virtual:
 
